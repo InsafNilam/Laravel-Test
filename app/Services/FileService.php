@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FileRepo;
 use Exception;
 use InvalidArgumentException;
 
@@ -84,12 +85,12 @@ class FileService
         $fileArray = $this->fileManagerService->get_path_by($folder, $ref_id, $trash);
         $latestVersion = null;
         foreach ($fileArray as $file) {
-            // Extract the numeric part from the version string using regular expression
-            $fileVersion = (int) preg_replace('/[^0-9.]/', '', $file['version']);
-            if ($latestVersion === null || version_compare($fileVersion, $latestVersion, '>')) {
+            $fileVersion = $file['version'];
+            if ($latestVersion === null || strnatcmp($fileVersion, $latestVersion['version']) > 0) {
                 $latestVersion = $file;
             }
         }
+
         return $latestVersion['path'];
     }
 

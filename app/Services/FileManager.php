@@ -161,7 +161,7 @@ class FileManager
      */
     public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none')
     {
-        $fileRepos = FileRepo::query()
+        $query = FileRepo::query()
             ->where("ref_name", $ref_table_name)
             ->where("ref_id", $ref_id);
 
@@ -172,26 +172,25 @@ class FileManager
         }
 
         if ($trash === "none") {
-            $fileRepos
-                ->orderBy('id', 'desc')
-                ->get();
+            $query
+                ->orderBy('id', 'desc');
         } else if ($trash === "with") {
-            $fileRepos
+            $query
                 ->withTrashed()
-                ->orderBy('id', 'desc')
-                ->get();
+                ->orderBy('id', 'desc');
         } else {
-            $fileRepos
+            $query
                 ->onlyTrashed()
-                ->orderBy('id', 'desc')
-                ->get();
+                ->orderBy('id', 'desc');
         }
 
+        $fileRepos = $query->get();
         $res = [];
 
-        foreach ($fileRepos as $fileRepo) {
-            $res[] = ["path" => asset('storage/') . '/' . $fileRepo->path, "id" => $fileRepo->id];
+        foreach ($fileRepos as $value) {
+            $res[] = ["id" => $value->id, "path" => asset('storage/') . '/' . $value->path, 'version' => $value->version];
         }
+
         return $res;
     }
 

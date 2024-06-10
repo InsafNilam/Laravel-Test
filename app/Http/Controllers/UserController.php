@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\FileService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -63,7 +64,7 @@ class UserController extends Controller
             DB::commit();
             return to_route('user.index')
                 ->with('success', 'User was created');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             throw $e;
         }
@@ -115,7 +116,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('user.index')->with('success', 'User was updated');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             throw $e;
         }

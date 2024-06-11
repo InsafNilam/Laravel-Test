@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\FileRepo;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
 class FileManager
@@ -77,7 +78,7 @@ class FileManager
      *  - **true:** Existing files are not deleted. A new version (V + number of existing files) is uploaded.
      *  - **false (default):** Existing files are deleted from storage before uploading a new file.
      *
-     * @return void This function does not return any value.
+     * @return FileRepo This function does not return any value.
      *
      * ## Behavior based on existing files and $preserve:
      *
@@ -94,19 +95,19 @@ class FileManager
      *        - Existing files are deleted from storage using `Storage::disk('public')->delete($fileRepo->path)`.
      *        - The new `$file` is uploaded using `self::upload`.
      */
-    public static function update(string $ref_table_name, int $ref_id, $file = null, $preserve = false)
+    public static function update(string $ref_table_name, int $ref_id, $file = null, $preserve = false): FileRepo
     {
         $fileRepos = FileRepo::query()->where("ref_id", $ref_id)->get();
         if ($fileRepos->isEmpty()) {
-            self::upload($ref_table_name, $ref_id, $file);
+            return self::upload($ref_table_name, $ref_id, $file);
         } else {
             if ($preserve) {
-                self::upload($ref_table_name, $ref_id, $file, version: 'V' . count($fileRepos));
+                return self::upload($ref_table_name, $ref_id, $file, version: 'V' . count($fileRepos));
             } else {
                 foreach ($fileRepos as $fileRepo) {
                     self::delete($fileRepo->id, false);
                 }
-                self::upload($ref_table_name, $ref_id, $file);
+                return self::upload($ref_table_name, $ref_id, $file);
             }
         }
     }
@@ -121,23 +122,23 @@ class FileManager
      * @param bool $preserve (default: false) Whether to preserve the file in storage.
      *  - **true:** The file in storage is deleted, and the database record is marked as soft-deleted (if applicable).
      *  - **false (default):** Only the database record is marked as soft-deleted (if applicable). The file will remain in storage.
+     * @return JsonResponse A JSON response indicating the status of the file deletion.
      *
      * @throws Exception If the file record with the provided ID is not found.
-     *
-     * @return void This function does not return any value.
      */
-    public static function delete(int $id, $preserve = false)
+    public static function delete(int $id, $preserve = false): JsonResponse
     {
         $query = FileRepo::find($id);
         if (!$query) {
             throw new Exception("File with ID $id not found.");
-        }
-        if ($query) {
+        } else {
             if ($preserve) {
                 FileRepo::query()->where('id', $id)->delete();
+                return response()->json(['message' => 'File deleted successfully'], 200);
             } else {
                 self::deleteFile($query->path);
                 FileRepo::query()->where('id', $id)->forceDelete();
+                return response()->json(['message' => 'File deleted successfully'], 200);
             }
         }
     }
@@ -148,17 +149,18 @@ class FileManager
      * This function deletes a file from storage based on the provided file path. If the file exists in storage,
      * it is deleted. If the file does not exist, an exception is thrown.
      *
-     * @param string $path The path to the file in storage.
-     * @return bool Returns true if the file is successfully deleted from storage.
+     * @param string $path  The path to the file in storage.
+     * @return JsonResponse A JSON response indicating the status of the file deletion.
      *
      */
-    public static function deleteFile(string $path): bool
+    public static function deleteFile(string $path): JsonResponse
     {
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
-            return true;
+            return response()->json(['message' => 'File deleted successfully'], 200);
+        } else {
+            return response()->json(['message' => 'File not found'], 404);
         }
-        return false;
     }
 
     /**
@@ -168,16 +170,19 @@ class FileManager
      * offers the flexibility to include soft-deleted records based on the provided `$trash` parameter.
      *
      * @param string $ref_table_name The name of the reference table where the file is associated.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @param string $trash (default: "none") An optional parameter to control which trashed records are included:
-     *  - "none": Returns only non-trashed records (default behavior).
-     *  - "with": Returns both non-trashed and trashed records.
-     *  - "only": Returns only trashed records.
+     * @param int $ref_id            The ID of the record in the reference table.
+     * @param string $trash          (default: "none") An optional parameter to control which trashed records are included:
+     *                                  - "none": Returns only non-trashed records (default behavior).
+     *                                  - "with": Returns both non-trashed and trashed records.
+     *                                  - "only": Returns only trashed records.
      *
-     * @return array An array containing file information for matching records. Each element in the array
-     *                 is an associative array with the following keys:
-     *                  - "path": The full path to the file relative to the public storage directory.
+     * @return array An array containing file information for matching records.
+     *               Each element in the array is an associative array with the following keys:
      *                  - "id": The ID of the file record.
+     *                  - "path": The full path to the file relative to the public storage directory.
+     *                  - "ref_name": The name of the reference table.
+     *                  - "ref_id": The ID of the record in the reference table.
+     *                  - "version": The version of the file.
      */
     public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none'): array
     {
@@ -208,7 +213,7 @@ class FileManager
         $res = [];
 
         foreach ($fileRepos as $value) {
-            $res[] = ["id" => $value->id, "path" => asset('storage/') . '/' . $value->path, 'version' => $value->version];
+            $res[] = ["id" => $value->id, "ref_name" => $value->ref_name, 'ref_id' => $value->ref_id, "path" => asset('storage/') . '/' . $value->path, 'version' => $value->version];
         }
 
         return $res;
@@ -222,21 +227,21 @@ class FileManager
      * the file will be accessible again (assuming the file still exists in storage).
      *
      * @param int $id The ID of the file to restore.
+     * @return JsonResponse A JSON response indicating the status of the file restoration.
      *
      * @throws Exception If the file with the provided ID is not found or cannot be restored.
-     *
-     * @return void This function does not return any value.
      */
-    public function restore(int $id)
+    public function restore(int $id): JsonResponse
     {
         $query = FileRepo::find($id);
 
         if (!$query) {
             throw new Exception("File with ID $id not found.");
         }
-
         if (!$query->restore()) {
             throw new Exception("Failed to restore file with ID $id.");
+        } else {
+            return response()->json(['message' => 'File restored successfully'], 200);
         }
     }
 }

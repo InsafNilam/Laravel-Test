@@ -58,9 +58,10 @@ class UserController extends Controller
             $user = User::create($data);
             // upload image if exists
             if ($image) {
-                $response = $this->fileService->upload('users', $user->id, $image);
-                $data['image'] = $response->getData()['path'];
-                $file = $response->getData()['file'];
+                // $response = $this->fileService->upload('users', $user->id, $image);
+                $data['image'] = $this->fileService->upload('users', $user->id, $image);
+                // $file = $response->getData()['file'];
+
                 $user->update($data);
             }
 
@@ -68,9 +69,9 @@ class UserController extends Controller
             return to_route('user.index')
                 ->with('success', 'User was created');
         } catch (Exception $e) {
-            if ($file) {
-                $this->fileService->delete($file->id);
-            }
+            // if ($file) {
+            //     $this->fileService->deleteFromStorage($file->path);
+            // }
             DB::rollback();
             throw $e;
         }
@@ -115,6 +116,7 @@ class UserController extends Controller
 
             $image = $request->file('image') ?? null;
             if ($image) {
+
                 $data['image'] = $this->fileService->update('users', $user->id, $image);
             }
             $user->update($data);
@@ -143,7 +145,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('user.index')->with('success', 'User was deleted');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             throw $e;
         }

@@ -46,17 +46,19 @@ class FileService
      *
      * @param string $folder The folder where the file is stored.
      * @param int $ref_id    The ID of the record in the reference table.
-     * @return JsonResponse  JSON Response of the path of the uploaded file and file.
+     * @return string  JSON Response of the path of the uploaded file and file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function upload($folder, $ref_id, $file): JsonResponse
+    public function upload($folder, $ref_id, $file): string
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
         }
         $file = $this->fileManagerService->upload($folder, $ref_id, $file);
-        return response()->json(["path" => $this->get($folder, $ref_id), "file" => $file]);
+
+        return $this->get($folder, $ref_id);
+        // return response()->json(["path" => $this->get($folder, $ref_id), "file" => $file]);
     }
 
     /**
@@ -169,6 +171,28 @@ class FileService
     }
 
     /**
+     * Delete file from storage
+     *
+     * This method is responsible for deleting a file from the storage.
+     * It performs the necessary operations to delete the file and returns
+     * true if the file was successfully deleted.
+     *
+     * @param int $id The ID of the file to be deleted.
+     * @return bool Returns true if the file was successfully deleted.
+     *
+     * @throws InvalidArgumentException If the required arguments are missing.
+     */
+    public function deleteFile(string $path): bool
+    {
+        if ($path == null) {
+            throw new InvalidArgumentException('Missing required arguments: Path is required to delete a file association.');
+        }
+
+        $this->fileManagerService->deleteFile($path);
+        return true;
+    }
+
+    /**
      * Update file in storage
      *
      * This method is responsible for updating a file in the storage.
@@ -183,7 +207,7 @@ class FileService
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function update($folder, $ref_id, $file = null, $preserve = false)
+    public function update($folder, $ref_id, $file = null, $preserve = false): string
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');

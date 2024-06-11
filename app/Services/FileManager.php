@@ -104,7 +104,6 @@ class FileManager
                 self::upload($ref_table_name, $ref_id, $file, version: 'V' . count($fileRepos));
             } else {
                 foreach ($fileRepos as $fileRepo) {
-                    self::deleteFromStorage($fileRepo->path);
                     self::delete($fileRepo->id, false);
                 }
                 self::upload($ref_table_name, $ref_id, $file);
@@ -135,19 +134,31 @@ class FileManager
         }
         if ($query) {
             if ($preserve) {
-                self::deleteFromStorage($query->path);
                 FileRepo::query()->where('id', $id)->delete();
             } else {
+                self::deleteFile($query->path);
                 FileRepo::query()->where('id', $id)->forceDelete();
             }
         }
     }
 
-    public static function deleteFromStorage(string $path)
+    /**
+     * Deletes a file from storage based on the file path.
+     *
+     * This function deletes a file from storage based on the provided file path. If the file exists in storage,
+     * it is deleted. If the file does not exist, an exception is thrown.
+     *
+     * @param string $path The path to the file in storage.
+     * @return bool Returns true if the file is successfully deleted from storage.
+     *
+     */
+    public static function deleteFile(string $path): bool
     {
         if (Storage::disk('public')->exists($path)) {
             Storage::disk('public')->delete($path);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -168,7 +179,7 @@ class FileManager
      *                  - "path": The full path to the file relative to the public storage directory.
      *                  - "id": The ID of the file record.
      */
-    public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none')
+    public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none'): array
     {
         $query = FileRepo::query()
             ->where("ref_name", $ref_table_name)

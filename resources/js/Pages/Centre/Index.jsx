@@ -39,6 +39,7 @@ import {
   Users,
 } from "lucide-react";
 import { Badge } from "@/Components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/Components/ui/toggle-group";
 
 export default function Index({ auth }) {
   return (
@@ -69,48 +70,51 @@ export default function Index({ auth }) {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="flex flex-row">
-                    <div>
-                      <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-                        <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                    <ToggleGroup
+                      type="single"
+                      className="items-start justify-start"
+                    >
+                      <nav className="grid items-start pr-2 text-sm font-medium lg:pr-4">
+                        <ToggleGroupItem
+                          value="a"
+                          className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <Home className="h-4 w-4" />
                           Dashboard
-                        </Link>
-                        <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="b"
+                          className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <ShoppingCart className="h-4 w-4" />
                           Orders
                           <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
                             6
                           </Badge>
-                        </Link>
-                        <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="c"
+                          className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <Package className="h-4 w-4" />
                           Products{" "}
-                        </Link>
-                        <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="d"
+                          className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <Users className="h-4 w-4" />
                           Customers
-                        </Link>
-                        <Link
-                          href="#"
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                          value="e"
+                          className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                         >
                           <LineChart className="h-4 w-4" />
                           Analytics
-                        </Link>
+                        </ToggleGroupItem>
                       </nav>
-                    </div>
+                    </ToggleGroup>
                     <div className="grid grid-cols-2 gap-4 flex-1">
                       <div className="">
                         <Label htmlFor="name" className="text-left">

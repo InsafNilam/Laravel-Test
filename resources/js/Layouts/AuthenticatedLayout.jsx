@@ -40,6 +40,12 @@ export default function Authenticated({ user, header, children }) {
                 >
                   Centre
                 </NavLink>
+                <NavLink
+                  href={route("document.index")}
+                  active={route().current("document.*")}
+                >
+                  Document
+                </NavLink>
               </div>
             </div>
 
@@ -138,10 +144,22 @@ export default function Authenticated({ user, header, children }) {
               Dashboard
             </ResponsiveNavLink>
             <ResponsiveNavLink
-              href={route("user.create")}
-              active={route().current("user.create")}
+              href={route("user.index")}
+              active={route().current("user.*")}
             >
               User
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              href={route("centre.index")}
+              active={route().current("centre.*")}
+            >
+              Centre
+            </ResponsiveNavLink>
+            <ResponsiveNavLink
+              href={route("document.index")}
+              active={route().current("document.*")}
+            >
+              Document
             </ResponsiveNavLink>
           </div>
 

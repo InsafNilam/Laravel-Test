@@ -30,29 +30,35 @@ class FileManager
      * @param int    $ref_id         The ID of the record in the reference table.
      * @param mixed  $file           The file to upload. If null, the method returns false.
      * @param string $version        The version of the file. Defaults to 'V0'.
-     * @return bool                  True if the file was successfully uploaded and the record was created, false otherwise.
+     * @return FileRepo              If the file was successfully uploaded and the record was created returns the file.
+     *
+     * @throws Exception If the file is null or if there is an issue uploading the file.
      */
-    public static function upload(string $ref_table_name, int $ref_id, $file = null, $version = 'V0'): bool
+    public static function upload(string $ref_table_name, int $ref_id, $file = null, $version = 'V0'): FileRepo
     {
-        if ($file != null) {
-            $fileName = Carbon::now()->getTimestamp() . "√√√" . $file->getClientOriginalName();
-            if (!Storage::disk('public')->exists($ref_table_name)) {
-                Storage::disk('public')->makeDirectory($ref_table_name);
+        try {
+            if ($file != null) {
+                $fileName = Carbon::now()->getTimestamp() . "√√√" . $file->getClientOriginalName();
+                if (!Storage::disk('public')->exists($ref_table_name)) {
+                    Storage::disk('public')->makeDirectory($ref_table_name);
+                }
+                Storage::disk('public')->put($ref_table_name . "/" . $fileName, file_get_contents($file));
+
+                $file = FileRepo::create([
+                    'ref_id' => $ref_id,
+                    'ref_name' => $ref_table_name,
+                    'path' => $ref_table_name . "/" . $fileName,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                    'version' => $version,
+                ]);
+
+                return $file;
+            } else {
+                throw new Exception("File is null");
             }
-            Storage::disk('public')->put($ref_table_name . "/" . $fileName, file_get_contents($file));
-
-            FileRepo::insert([
-                'ref_id' => $ref_id,
-                'ref_name' => $ref_table_name,
-                'path' => $ref_table_name . "/" . $fileName,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-                'version' => $version,
-            ]);
-
-            return true;
-        } else {
-            return false;
+        } catch (Exception $e) {
+            throw new Exception("Failed to upload file: " . $e->getMessage());
         }
     }
 

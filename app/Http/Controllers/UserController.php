@@ -52,12 +52,15 @@ class UserController extends Controller
             $data['email_verified_at'] = time();
             $data['password'] = bcrypt($data['password']);
             $image = $request->file('image') ?? null;
+            $file = null;
 
             // create user before upload image since we need user id
             $user = User::create($data);
             // upload image if exists
             if ($image) {
-                $data['image'] = $this->fileService->upload('users', $user->id, $image);
+                $response = $this->fileService->upload('users', $user->id, $image);
+                $data['image'] = $response->getData()['path'];
+                $file = $response->getData()['file'];
                 $user->update($data);
             }
 
@@ -65,6 +68,9 @@ class UserController extends Controller
             return to_route('user.index')
                 ->with('success', 'User was created');
         } catch (Exception $e) {
+            if ($file) {
+                $this->fileService->delete('users', $id = $user->id);
+            }
             DB::rollback();
             throw $e;
         }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\FileRepo;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use InvalidArgumentException;
 
 class FileService
@@ -44,18 +45,18 @@ class FileService
      * It takes care of handling the file upload process and storing the file in the appropriate location.
      *
      * @param string $folder The folder where the file is stored.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @return string Returns the path of the uploaded file.
+     * @param int $ref_id    The ID of the record in the reference table.
+     * @return JsonResponse  JSON Response of the path of the uploaded file and file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function upload($folder, $ref_id, $file)
+    public function upload($folder, $ref_id, $file): JsonResponse
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
         }
-        $this->fileManagerService->upload($folder, $ref_id, $file);
-        return $this->get($folder, $ref_id);
+        $file = $this->fileManagerService->upload($folder, $ref_id, $file);
+        return response()->json(["path" => $this->get($folder, $ref_id), "file" => $file]);
     }
 
     /**
@@ -77,7 +78,7 @@ class FileService
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function get($folder, $ref_id, $trash = 'none')
+    public function get($folder, $ref_id, $trash = 'none'): string
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
@@ -130,7 +131,7 @@ class FileService
      *
      *  @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function delete($folder, $ref_id, $preserve = false)
+    public function deleteAll($folder, $ref_id, $preserve = false)
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
@@ -143,6 +144,20 @@ class FileService
         }
         return true;
     }
+
+    // public function delete($folder, $ref_id, $preserve = false)
+    // {
+    //     if ($ref_id == null || $folder == null) {
+    //         throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
+    //     }
+    //     $files = $this->getAll($folder, $ref_id);
+    //     foreach ($files as $file) {
+    //         if (is_array($file)) {
+    //             $this->fileManagerService->delete($file['id'], $preserve);
+    //         }
+    //     }
+    //     return true;
+    // }
 
     /**
      * Update file in storage

@@ -69,7 +69,7 @@ class UserController extends Controller
                 ->with('success', 'User was created');
         } catch (Exception $e) {
             if ($file) {
-                $this->fileService->delete('users', $id = $user->id);
+                $this->fileService->delete($file->id);
             }
             DB::rollback();
             throw $e;
@@ -137,7 +137,7 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->fileService->delete('users', $user->id);
+            $this->fileService->deleteAll('users', $user->id);
             $user->delete();
 
             DB::commit();

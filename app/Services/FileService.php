@@ -145,19 +145,28 @@ class FileService
         return true;
     }
 
-    // public function delete($folder, $ref_id, $preserve = false)
-    // {
-    //     if ($ref_id == null || $folder == null) {
-    //         throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
-    //     }
-    //     $files = $this->getAll($folder, $ref_id);
-    //     foreach ($files as $file) {
-    //         if (is_array($file)) {
-    //             $this->fileManagerService->delete($file['id'], $preserve);
-    //         }
-    //     }
-    //     return true;
-    // }
+    /**
+     * Delete file from storage
+     *
+     * This method is responsible for deleting a file from the storage.
+     * It performs the necessary operations to delete the file and returns
+     * true if the file was successfully deleted.
+     *
+     * @param int $id The ID of the file to be deleted.
+     * @param bool $preserve (default: false) Whether to preserve the file in storage.
+     * @return bool Returns true if the file was successfully deleted.
+     *
+     * @throws InvalidArgumentException If the required arguments are missing.
+     */
+    public function delete($id, $preserve = false)
+    {
+        if ($id == null) {
+            throw new InvalidArgumentException('Missing required arguments: ID is required to delete a file association.');
+        }
+
+        $this->fileManagerService->delete($id, $preserve);
+        return true;
+    }
 
     /**
      * Update file in storage

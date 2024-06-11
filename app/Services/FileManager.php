@@ -104,9 +104,7 @@ class FileManager
                 self::upload($ref_table_name, $ref_id, $file, version: 'V' . count($fileRepos));
             } else {
                 foreach ($fileRepos as $fileRepo) {
-                    if (Storage::disk('public')->exists($fileRepo->path)) {
-                        Storage::disk('public')->delete($fileRepo->path);
-                    }
+                    self::deleteFromStorage($fileRepo->path);
                     self::delete($fileRepo->id, false);
                 }
                 self::upload($ref_table_name, $ref_id, $file);
@@ -137,13 +135,18 @@ class FileManager
         }
         if ($query) {
             if ($preserve) {
-                if (Storage::disk('public')->exists($query->path)) {
-                    Storage::disk('public')->delete($query->path);
-                }
+                self::deleteFromStorage($query->path);
                 FileRepo::query()->where('id', $id)->delete();
             } else {
                 FileRepo::query()->where('id', $id)->forceDelete();
             }
+        }
+    }
+
+    public static function deleteFromStorage(string $path)
+    {
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
         }
     }
 

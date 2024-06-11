@@ -68,8 +68,8 @@ export default function Index({ auth }) {
                       when you're done.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="flex">
-                    <div className="w-10 h-auto gap-4">
+                  <div className="flex flex-row">
+                    <div>
                       <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
                         <Link
                           href="#"
@@ -111,9 +111,9 @@ export default function Index({ auth }) {
                         </Link>
                       </nav>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 py-20 px-40 ">
-                      <div className="grid grid-cols-4 items-centre gap-4">
-                        <Label htmlFor="name" className="text-right">
+                    <div className="grid grid-cols-2 gap-4 flex-1">
+                      <div className="">
+                        <Label htmlFor="name" className="text-left">
                           Name
                         </Label>
                         <Input
@@ -122,8 +122,8 @@ export default function Index({ auth }) {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
                           Username
                         </Label>
                         <Input
@@ -132,8 +132,8 @@ export default function Index({ auth }) {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
                           Username
                         </Label>
                         <Input
@@ -142,8 +142,8 @@ export default function Index({ auth }) {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
                           Username
                         </Label>
                         <Input
@@ -152,8 +152,8 @@ export default function Index({ auth }) {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
                           Username
                         </Label>
                         <Input
@@ -162,8 +162,28 @@ export default function Index({ auth }) {
                           className="col-span-3"
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
+                          Username
+                        </Label>
+                        <Input
+                          id="username"
+                          defaultValue="@peduarte"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
+                          Username
+                        </Label>
+                        <Input
+                          id="username"
+                          defaultValue="@peduarte"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="username" className="text-left">
                           Username
                         </Label>
                         <Input

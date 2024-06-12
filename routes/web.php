@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CentreController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/user', UserController::class);
     Route::resource('/centre', CentreController::class);
+    Route::resource('/document', DocumentController::class);
 });
 
 Route::middleware('auth')->group(function () {

@@ -51,28 +51,29 @@ class UserController extends Controller
 
             $data['email_verified_at'] = time();
             $data['password'] = bcrypt($data['password']);
-            $image = $request->file('image') ?? null;
-            $file = null;
 
-            // create user before upload image since we need user id
             $user = User::create($data);
-            // upload image if exists
+
+            $file = null;
+            $image = $request->file('image') ?? null;
             if ($image) {
-                // $response = $this->fileService->upload('users', $user->id, $image);
-                $data['image'] = $this->fileService->upload('users', $user->id, $image);
-                // $file = $response->getData()['file'];
+                $response = $this->fileService->upload('users', $user->id, $image)->getData();
+                $file = $response->file;
+                $data['image'] = $response->path;
 
                 $user->update($data);
             }
 
             DB::commit();
+
             return to_route('user.index')
                 ->with('success', 'User was created');
         } catch (Exception $e) {
-            // if ($file) {
-            //     $this->fileService->deleteFromStorage($file->path);
-            // }
             DB::rollback();
+            if ($file) {
+                $this->fileService->deleteFile($file->path);
+            }
+
             throw $e;
         }
     }
@@ -116,16 +117,21 @@ class UserController extends Controller
 
             $image = $request->file('image') ?? null;
             if ($image) {
-
-                $data['image'] = $this->fileService->update('users', $user->id, $image);
+                $response = $this->fileService->update('users', $user->id, $image)->getData();
+                $file = $response->file;
+                $data['image'] = $file->path;
             }
-            $user->update($data);
 
+            $user->update($data);
             DB::commit();
 
             return redirect()->route('user.index')->with('success', 'User was updated');
         } catch (Exception $e) {
             DB::rollback();
+            if ($file) {
+                $this->fileService->deleteFile($file->path);
+            }
+
             throw $e;
         }
     }

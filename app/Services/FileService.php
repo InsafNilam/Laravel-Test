@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\FileRepo;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use InvalidArgumentException;
 
@@ -46,19 +44,18 @@ class FileService
      *
      * @param string $folder The folder where the file is stored.
      * @param int $ref_id    The ID of the record in the reference table.
-     * @return string  JSON Response of the path of the uploaded file and file.
+     * @return JsonResponse  JSON Response of the path of the uploaded file and file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function upload($folder, $ref_id, $file): string
+    public function upload($folder, $ref_id, $file): JsonResponse
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
         }
         $file = $this->fileManagerService->upload($folder, $ref_id, $file);
 
-        return $this->get($folder, $ref_id);
-        // return response()->json(["path" => $this->get($folder, $ref_id), "file" => $file]);
+        return response()->json(["path" => asset('storage/') . '/' . $file->path, "file" => $file]);
     }
 
     /**
@@ -74,18 +71,15 @@ class FileService
      *
      * Finally, the method returns the path of the latest version of the file.
      *
-     * @param string $folder The name of the folder where the file is located.
+     * @param string $folder  The name of the folder where the file is located.
      * @param int $ref_id     The ID of the record in the reference table.
-     * @return string        The path of the latest version of the file.
+     * @return JsonResponse   returns the attributes of the latest version of the file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function get($folder, $ref_id, $trash = 'none'): string
+    public function get($folder, $ref_id, $trash = 'none'): JsonResponse
     {
-        if ($ref_id == null || $folder == null) {
-            throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
-        }
-        $fileArray = $this->fileManagerService->get_path_by($folder, $ref_id, $trash);
+        $fileArray = self::getAll($folder, $ref_id, $trash);
         $latestVersion = null;
         foreach ($fileArray as $file) {
             $fileVersion = $file['version'];
@@ -94,7 +88,7 @@ class FileService
             }
         }
 
-        return $latestVersion['path'];
+        return $latestVersion;
     }
 
     /**
@@ -107,16 +101,17 @@ class FileService
      * the file's properties, such as its id, path
      *
      * @param string $folder The path of the folder within the storage system from which to retrieve files.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @return array An array of associative arrays, each representing a file in the specified folder. If $id is provided, the array may contain a single file.
+     * @param int $ref_id    The ID of the record in the reference table.
+     * @return array         An array of associative arrays, each representing a file in the specified folder. If $id is provided, the array may contain a single file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function getAll($folder, $ref_id, $trash = 'none')
+    public function getAll($folder, $ref_id, $trash = 'none'): array
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
         }
+
         return $this->fileManagerService->get_path_by($folder, $ref_id, $trash);
     }
 
@@ -128,12 +123,12 @@ class FileService
      * true if the file was successfully deleted.
      *
      * @param string $folder The folder where the file is stored.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @return bool Returns true if the file was successfully deleted.
+     * @param int $ref_id    The ID of the record in the reference table.
+     * @return JsonResponse  Returns a JSON response indicating the status of the file deletion.
      *
      *  @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function deleteAll($folder, $ref_id, $preserve = false)
+    public function deleteAll($folder, $ref_id, $preserve = false): JsonResponse
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
@@ -144,7 +139,7 @@ class FileService
                 $this->fileManagerService->delete($file['id'], $preserve);
             }
         }
-        return true;
+        return response()->json(["message" => "Files deleted successfully"], 200);
     }
 
     /**
@@ -154,20 +149,19 @@ class FileService
      * It performs the necessary operations to delete the file and returns
      * true if the file was successfully deleted.
      *
-     * @param int $id The ID of the file to be deleted.
+     * @param int $id        The ID of the file to be deleted.
      * @param bool $preserve (default: false) Whether to preserve the file in storage.
-     * @return bool Returns true if the file was successfully deleted.
+     * @return JsonResponse  Returns a JSON response indicating the status of the file deletion.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function delete($id, $preserve = false)
+    public function delete($id, $preserve = false): JsonResponse
     {
         if ($id == null) {
             throw new InvalidArgumentException('Missing required arguments: ID is required to delete a file association.');
         }
 
-        $this->fileManagerService->delete($id, $preserve);
-        return true;
+        return $this->fileManagerService->delete($id, $preserve);
     }
 
     /**
@@ -177,19 +171,17 @@ class FileService
      * It performs the necessary operations to delete the file and returns
      * true if the file was successfully deleted.
      *
-     * @param int $id The ID of the file to be deleted.
-     * @return bool Returns true if the file was successfully deleted.
+     * @param int $id       The ID of the file to be deleted.
+     * @return JsonResponse Returns a JSON response indicating the status of the file deletion.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function deleteFile(string $path): bool
+    public function deleteFile(string $path): JsonResponse
     {
         if ($path == null) {
             throw new InvalidArgumentException('Missing required arguments: Path is required to delete a file association.');
         }
-
-        $this->fileManagerService->deleteFile($path);
-        return true;
+        return $this->fileManagerService->deleteFile($path);
     }
 
     /**
@@ -200,20 +192,21 @@ class FileService
      * the path value of the updated file.
      *
      * @param string $folder The folder where the file is stored.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @param mixed $file The updated file.
+     * @param int $ref_id    The ID of the record in the reference table.
+     * @param mixed $file    The updated file.
      * @param bool $preserve (default: false) Whether to preserve the file in storage.
-     * @return string Returns the path of the updated file if it was successfully updated.
+     * @return JsonResponse  Returns the path of the updated file.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
-    public function update($folder, $ref_id, $file = null, $preserve = false): string
+    public function update($folder, $ref_id, $file = null, $preserve = false): JsonResponse
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
         }
-        $this->fileManagerService->update($folder, $ref_id, $file, $preserve);
-        return $this->get($folder, $ref_id);
+
+        $file = $this->fileManagerService->update($folder, $ref_id, $file, $preserve);
+        return response()->json(["path" => asset('storage/') . '/' . $file->path, "file" => $file]);
     }
 
     /**
@@ -224,13 +217,13 @@ class FileService
      * true if the file was successfully restored.
      *
      * @param string $folder The folder where the file is stored.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @return bool Returns true if the file was successfully restored.
+     * @param int $ref_id    The ID of the record in the reference table.
+     * @return JsonResponse  Returns a JSON response indicating the status of the file restoration.
      *
      * @throws InvalidArgumentException If the required arguments are missing.
      */
 
-    public function restore($folder, $ref_id)
+    public function restore($folder, $ref_id): JsonResponse
     {
         if ($ref_id == null || $folder == null) {
             throw new InvalidArgumentException('Missing required arguments: Reference ID and folder are both required to update a file association.');
@@ -241,6 +234,6 @@ class FileService
                 $this->fileManagerService->restore($file['id']);
             }
         }
-        return true;
+        return response()->json(["message" => "Files restored successfully"], 200);
     }
 }

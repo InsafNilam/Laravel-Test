@@ -16,4 +16,9 @@ class Document extends Model
         'path',
         'version',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

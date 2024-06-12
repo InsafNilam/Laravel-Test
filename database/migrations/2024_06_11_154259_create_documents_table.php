@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->integer('ref_id');
+            $table->foreignId('ref_id')->constrained('users');
             $table->string('ref_name');
             $table->text('path');
             $table->string('version')->default('V0');

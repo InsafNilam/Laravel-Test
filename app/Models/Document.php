@@ -4,20 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'description',
-        'status',
-        'type',
+        'ref_id',
+        'ref_name',
+        'path',
+        'version',
     ];
-
-    public function files()
-    {
-        return $this->hasMany(FileRepo::class);
-    }
 }

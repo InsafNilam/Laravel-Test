@@ -1,6 +1,7 @@
 import { Button } from "@/Components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -16,6 +17,14 @@ import FileUpload from "./Partials/FileUpload";
 export default function Index({ auth, documents }) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState({});
+
+  const handleCancel = () => {
+    setFiles({});
+  };
+
+  const handleUpload = () => {
+    console.log(files);
+  };
 
   return (
     <AuthenticatedLayout
@@ -40,8 +49,24 @@ export default function Index({ auth, documents }) {
                 </DialogDescription>
               </DialogHeader>
               <FileUpload files={files} setFiles={setFiles} />
-              <DialogFooter>
-                <Button type="submit">Upload</Button>
+              <DialogFooter className="sm:justify-end">
+                <DialogClose asChild>
+                  <Button
+                    onClick={handleCancel}
+                    type="button"
+                    variant="secondary"
+                    className="bg-red-600 text-white hover:bg-red-500"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="bg-emerald-500 text-white hover:bg-emerald-400"
+                >
+                  Upload
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

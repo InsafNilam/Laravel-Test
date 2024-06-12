@@ -52,7 +52,7 @@ export default function Index({ auth }) {
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 className="text-xl font-semibold leading-tight text-gray-800">
           Centre
         </h2>
       }
@@ -60,8 +60,8 @@ export default function Index({ auth }) {
       <Head title="Centre" />
 
       <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <Dialog>
                 <DialogTrigger asChild>
@@ -84,49 +84,49 @@ export default function Index({ auth }) {
                         value={value.toString()}
                         onValueChange={(value) => onClick(value)}
                       >
-                        <nav className="grid items-start pr-2 text-sm font-medium lg:pr-4 gap-1">
+                        <nav className="grid items-start gap-1 pr-2 text-sm font-medium lg:pr-4">
                           <ToggleGroupItem
                             value="1"
-                            className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            className="flex items-start justify-start gap-3 px-3 py-2 transition-all rounded-lg text-muted-foreground hover:text-primary"
                           >
-                            <Home className="h-4 w-4" />
+                            <Home className="w-4 h-4" />
                             Dashboard
                           </ToggleGroupItem>
                           <ToggleGroupItem
                             value="2"
-                            className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            className="flex items-start justify-start gap-3 px-3 py-2 transition-all rounded-lg text-muted-foreground hover:text-primary"
                           >
-                            <ShoppingCart className="h-4 w-4" />
+                            <ShoppingCart className="w-4 h-4" />
                             Orders
-                            <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                            <Badge className="flex items-center justify-center w-6 h-6 ml-auto rounded-full shrink-0">
                               6
                             </Badge>
                           </ToggleGroupItem>
                           <ToggleGroupItem
                             value="3"
-                            className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            className="flex items-start justify-start gap-3 px-3 py-2 transition-all rounded-lg text-muted-foreground hover:text-primary"
                           >
-                            <Package className="h-4 w-4" />
+                            <Package className="w-4 h-4" />
                             Products{" "}
                           </ToggleGroupItem>
                           <ToggleGroupItem
                             value="4"
-                            className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            className="flex items-start justify-start gap-3 px-3 py-2 transition-all rounded-lg text-muted-foreground hover:text-primary"
                           >
-                            <Users className="h-4 w-4" />
+                            <Users className="w-4 h-4" />
                             Customers
                           </ToggleGroupItem>
                           <ToggleGroupItem
                             value="5"
-                            className="flex items-start justify-start gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                            className="flex items-start justify-start gap-3 px-3 py-2 transition-all rounded-lg text-muted-foreground hover:text-primary"
                           >
-                            <LineChart className="h-4 w-4" />
+                            <LineChart className="w-4 h-4" />
                             Analytics
                           </ToggleGroupItem>
                         </nav>
                       </ToggleGroup>
                     </div>
-                    <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 flex-1">
+                    <div className="flex-1 p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="">
                           <Label htmlFor="name" className="text-left">

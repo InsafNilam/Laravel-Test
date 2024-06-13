@@ -10,11 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('file_repos', function (Blueprint $table) {
             $table->id();
-            $table->string('file_path');
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('file_id')->constrained('file_repos');
+            $table->foreignId('ref_id');
+            $table->string('ref_name');
+            $table->text('path');
+            $table->string('type')->default('undefined');
+            $table->string('version')->default('V0');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -24,6 +27,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('file_repos');
     }
 };

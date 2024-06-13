@@ -3,19 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Services\FileService;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
+    protected $fileService;
+
+    public function __construct(FileService $fileService)
+    {
+        $this->fileService = $fileService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         //
+        $documents = Document::query()->where('user_id', auth()->id())->paginate(10)->onEachSide(1);
+
         return Inertia::render('Document/Index', [
-            'documents' => [],
+            'documents' => $documents,
         ]);
     }
 
@@ -33,30 +44,24 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         //
-        $validated = $request->validate([
-            'images' => 'required',
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                $files = $request->file('files');
+                $user_id = auth()->id();
 
-        if ($request->hasFile('images')) {
-            // $allowedfileExtension = ['pdf', 'jpg', 'png', 'docx'];
-            $files = $request->file('images');
-            dd($files);
-            // foreach ($files as $file) {
-            //     $filename = $file->getClientOriginalName();
-            //     $extension = $file->getClientOriginalExtension();
-            //     $check = in_array($extension, $allowedfileExtension);
-            //     // dd($check);
-            //     if ($check) {
-            //         // $items = Item::create($request->all());
-            //         // foreach ($request->photos as $photo) {
-            //         //     $filename = $photo->store('photos');
-            //         //     ItemDetail::create([
-            //         //         'item_id' => $items->id,
-            //         //         'filename' => $filename
-            //         //     ]);
-            //         // }
-            //     }
-            // }
+                foreach ($files as $file) {
+                    $response = $this->fileService->upload('documents', $user_id, $file)->getData();
+                    Document::create([
+                        'user_id' => $user_id,
+                        'file_id' => $response->file->id,
+                        'file_path' => $response->path,
+                    ]);
+                }
+            });
+            return back()->with('success', 'Files uploaded successfully');
+        } catch (Exception $e) {
+            // DB::rollBack();
+            back()->withErrors(['files' => 'No files were uploaded']);
         }
     }
 

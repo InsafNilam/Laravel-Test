@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Document;
+use App\Models\FileRepo;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -31,11 +31,11 @@ class FileManager
      * @param int    $ref_id         The ID of the record in the reference table.
      * @param mixed  $file           The file to upload. If null, the method returns false.
      * @param string $version        The version of the file. Defaults to 'V0'.
-     * @return Document              If the document was successfully uploaded and the record was created returns the document.
+     * @return FileRepo              If the document was successfully uploaded and the record was created returns the document.
      *
      * @throws Exception If the file is null or if there is an issue uploading the file.
      */
-    public static function upload(string $ref_table_name, int $ref_id, $file = null, $version = 'V0'): Document
+    public static function upload(string $ref_table_name, int $ref_id, $file = null, $version = 'V0'): FileRepo
     {
         try {
             if ($file != null) {
@@ -45,7 +45,7 @@ class FileManager
                 }
                 Storage::disk('public')->put($ref_table_name . "/" . $fileName, file_get_contents($file));
 
-                $file = Document::create([
+                $file = FileRepo::create([
                     'ref_id' => $ref_id,
                     'ref_name' => $ref_table_name,
                     'path' => $ref_table_name . "/" . $fileName,
@@ -78,7 +78,7 @@ class FileManager
      *  - **true:** Existing files are not deleted. A new version (V + number of existing files) is uploaded.
      *  - **false (default):** Existing files are deleted from storage before uploading a new file.
      *
-     * @return Document If the document was successfully updated and the record was created returns the document.
+     * @return FileRepo If the document was successfully updated and the record was created returns the document.
      *
      * ## Behavior based on existing files and $preserve:
      *
@@ -95,9 +95,9 @@ class FileManager
      *        - Existing files are deleted from storage using `Storage::disk('public')->delete($document->path)`.
      *        - The new `$file` is uploaded using `self::upload`.
      */
-    public static function update(string $ref_table_name, int $ref_id, $file = null, $preserve = false): Document
+    public static function update(string $ref_table_name, int $ref_id, $file = null, $preserve = false): FileRepo
     {
-        $documents = Document::query()->where("ref_id", $ref_id)->get();
+        $documents = FileRepo::query()->where("ref_id", $ref_id)->get();
         if ($documents->isEmpty()) {
             return self::upload($ref_table_name, $ref_id, $file);
         } else {
@@ -128,16 +128,16 @@ class FileManager
      */
     public static function delete(int $id, $preserve = false): JsonResponse
     {
-        $query = Document::find($id);
+        $query = FileRepo::find($id);
         if (!$query) {
             throw new Exception("File with ID $id not found.");
         } else {
             if ($preserve) {
-                Document::query()->where('id', $id)->delete();
+                FileRepo::query()->where('id', $id)->delete();
                 return response()->json(['message' => 'File deleted successfully'], 200);
             } else {
                 self::deleteFile($query->path);
-                Document::query()->where('id', $id)->forceDelete();
+                FileRepo::query()->where('id', $id)->forceDelete();
                 return response()->json(['message' => 'File deleted successfully'], 200);
             }
         }
@@ -186,7 +186,7 @@ class FileManager
      */
     public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none'): array
     {
-        $query = Document::query()
+        $query = FileRepo::query()
             ->where("ref_name", $ref_table_name)
             ->where("ref_id", $ref_id);
 
@@ -233,7 +233,7 @@ class FileManager
      */
     public function restore(int $id): JsonResponse
     {
-        $query = Document::find($id);
+        $query = FileRepo::find($id);
 
         if (!$query) {
             throw new Exception("File with ID $id not found.");

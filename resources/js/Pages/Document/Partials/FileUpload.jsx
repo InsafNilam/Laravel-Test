@@ -36,7 +36,6 @@ export default function FileUpload({ files, setFiles, setData }) {
     } else {
       setFileLimit(false);
       setFiles(uploaded);
-      // setData({files: uploaded})
     }
 
     // Reset file input field to allow the same file to be selected again

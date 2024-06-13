@@ -4,28 +4,27 @@ import { ScrollArea } from "@/Components/ui/scroll-area";
 
 const MAX_COUNT = 5;
 
-export default function FileUpload({ files, setData, setFiles }) {
-  const [counter, setCounter] = useState(0);
-  const [isDraggedOver, setIsDraggedOver] = useState(false);
+export default function FileUpload({ files, setFiles, setData }) {
   const fileInputRef = useRef(null);
 
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [counter, setCounter] = useState(0);
+  const [isDraggedOver, setIsDraggedOver] = useState(false);
   const [fileLimit, setFileLimit] = useState(false);
 
-  const handleUploadFiles = (files) => {
-    const uploaded = [...uploadedFiles];
+  const handleUploadFiles = (documents) => {
+    const uploaded = [...files];
     let limitExceeded = false;
 
-    files.forEach((file) => {
+    documents.forEach((document) => {
       if (uploaded.length >= MAX_COUNT) {
         limitExceeded = true;
         return;
       }
 
-      if (!uploaded.some((f) => f.document.name === file.name)) {
-        const objectURL = URL.createObjectURL(file);
+      if (!uploaded.some((f) => f.document.name === document.name)) {
+        const objectURL = URL.createObjectURL(document);
         uploaded.push({
-          document: file,
+          document: document,
           url: objectURL,
         });
       }
@@ -36,7 +35,7 @@ export default function FileUpload({ files, setData, setFiles }) {
       setFileLimit(true);
     } else {
       setFileLimit(false);
-      setUploadedFiles(uploaded);
+      setFiles(uploaded);
       // setData({files: uploaded})
     }
 
@@ -54,7 +53,7 @@ export default function FileUpload({ files, setData, setFiles }) {
 
     URL.revokeObjectURL(url);
 
-    setUploadedFiles((files) => {
+    setFiles((files) => {
       return files.filter((file) => file.url !== url);
     });
   };
@@ -137,7 +136,7 @@ export default function FileUpload({ files, setData, setFiles }) {
         <h1 className="font-semibold sm:text-lg text-gray-900">To Upload</h1>
         <ScrollArea className="h-44 w-full">
           <div className="h-full w-full pr-3">
-            {Object.keys(uploadedFiles).length === 0 ? (
+            {files.length === 0 ? (
               <div className="text-center flex flex-col items-center justify-center">
                 <img
                   className="mx-auto w-32"
@@ -150,7 +149,7 @@ export default function FileUpload({ files, setData, setFiles }) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {Object.values(uploadedFiles).map((file) => (
+                {files.map((file) => (
                   <div key={file.url} className="p-1 h-40">
                     <FileTemplate
                       file={file.document}

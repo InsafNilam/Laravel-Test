@@ -15,13 +15,13 @@ import React, { useState } from "react";
 import FileUpload from "./Partials/FileUpload";
 
 export default function Index({ auth, documents }) {
-  const [files, setFiles] = useState({});
+  const [files, setFiles] = useState([]);
   const { data, setData, post, processing, errors, reset } = useForm({
     files: [],
   });
 
   const handleCancel = () => {
-    setFiles({});
+    setFiles([]);
   };
 
   const onSubmit = (e) => {
@@ -53,7 +53,7 @@ export default function Index({ auth, documents }) {
                   safe access.
                 </DialogDescription>
               </DialogHeader>
-              <FileUpload files={files} setData={setData} setFiles={setFiles} />
+              <FileUpload files={files} setFiles={setFiles} setData={setData} />
               <DialogFooter className="justify-end gap-2">
                 <DialogClose asChild>
                   <Button

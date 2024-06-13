@@ -119,7 +119,7 @@ class UserController extends Controller
             if ($image) {
                 $response = $this->fileService->update('users', $user->id, $image)->getData();
                 $file = $response->file;
-                $data['image'] = $file->path;
+                $data['image'] = $response->path;
             }
 
             $user->update($data);

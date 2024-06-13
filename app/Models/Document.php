@@ -15,6 +15,7 @@ class Document extends Model
         'ref_name',
         'path',
         'version',
+        'type'
     ];
 
     public function user()

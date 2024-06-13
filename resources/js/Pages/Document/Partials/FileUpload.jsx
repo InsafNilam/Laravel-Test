@@ -1,44 +1,67 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import FileTemplate from "./FileTemplate";
 import { ScrollArea } from "@/Components/ui/scroll-area";
 
-export default function FileUpload({ files, setFiles }) {
+const MAX_COUNT = 5;
+
+export default function FileUpload({ files, setData, setFiles }) {
   const [counter, setCounter] = useState(0);
   const [isDraggedOver, setIsDraggedOver] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const addFile = (file) => {
-    const objectURL = URL.createObjectURL(file);
-    const fileData = {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      objectURL,
-    };
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [fileLimit, setFileLimit] = useState(false);
 
-    setFiles((prevFiles) => ({ ...prevFiles, [objectURL]: fileData }));
-  };
+  const handleUploadFiles = (files) => {
+    const uploaded = [...uploadedFiles];
+    let limitExceeded = false;
 
-  const handleFiles = (files) => {
-    for (const file of files) {
-      addFile(file);
+    files.forEach((file) => {
+      if (uploaded.length >= MAX_COUNT) {
+        limitExceeded = true;
+        return;
+      }
+
+      if (!uploaded.some((f) => f.document.name === file.name)) {
+        const objectURL = URL.createObjectURL(file);
+        uploaded.push({
+          document: file,
+          url: objectURL,
+        });
+      }
+    });
+
+    if (limitExceeded) {
+      alert(`You can only upload ${MAX_COUNT} files at a time`);
+      setFileLimit(true);
+    } else {
+      setFileLimit(false);
+      setUploadedFiles(uploaded);
+      // setData({files: uploaded})
     }
+
+    // Reset file input field to allow the same file to be selected again
+    fileInputRef.current.value = null;
   };
 
-  const handleFileUpload = (e) => {
-    handleFiles(e.target.files);
+  const handleFileEvent = (e) => {
+    const files = Array.prototype.slice.call(e.target.files);
+    handleUploadFiles(files);
   };
 
-  const handleFileDelete = (objectURL) => {
-    setFiles((prevFiles) => {
-      const updatedFiles = { ...prevFiles };
-      delete updatedFiles[objectURL];
-      return updatedFiles;
+  const handleFileDelete = (file) => {
+    const { url } = file;
+
+    URL.revokeObjectURL(url);
+
+    setUploadedFiles((files) => {
+      return files.filter((file) => file.url !== url);
     });
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    handleFiles(e.dataTransfer.files);
+    handleUploadFiles(e.dataTransfer.files);
     setIsDraggedOver(false);
     setCounter(0);
   };
@@ -83,9 +106,11 @@ export default function FileUpload({ files, setFiles }) {
         <input
           id="file"
           type="file"
+          name="files"
           multiple
+          ref={fileInputRef}
           className="hidden"
-          onChange={(e) => handleFileUpload(e)}
+          onChange={(e) => handleFileEvent(e)}
         />
         <label
           htmlFor="file"
@@ -112,7 +137,7 @@ export default function FileUpload({ files, setFiles }) {
         <h1 className="font-semibold sm:text-lg text-gray-900">To Upload</h1>
         <ScrollArea className="h-44 w-full">
           <div className="h-full w-full pr-3">
-            {Object.keys(files).length === 0 ? (
+            {Object.keys(uploadedFiles).length === 0 ? (
               <div className="text-center flex flex-col items-center justify-center">
                 <img
                   className="mx-auto w-32"
@@ -125,11 +150,12 @@ export default function FileUpload({ files, setFiles }) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {Object.values(files).map((file) => (
-                  <div key={file.objectURL} className="p-1 h-40">
+                {Object.values(uploadedFiles).map((file) => (
+                  <div key={file.url} className="p-1 h-40">
                     <FileTemplate
-                      file={file}
-                      handleFileDelete={() => handleFileDelete(file.objectURL)}
+                      file={file.document}
+                      url={file.url}
+                      handleFileDelete={() => handleFileDelete(file)}
                     />
                   </div>
                 ))}

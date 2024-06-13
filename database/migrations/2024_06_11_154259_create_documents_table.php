@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->foreignId('ref_id')->constrained('users');
             $table->string('ref_name');
             $table->text('path');
+            $table->string('type')->default('undefined');
             $table->string('version')->default('V0');
             $table->softDeletes();
             $table->timestamps();

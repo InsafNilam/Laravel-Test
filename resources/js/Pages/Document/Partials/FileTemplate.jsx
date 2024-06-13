@@ -1,29 +1,23 @@
 import { Badge } from "@/Components/ui/badge";
 import React from "react";
 
-export default function FileTemplate({ file, handleFileDelete }) {
-  const { objectURL, name, type } = file;
+export default function FileTemplate({ file, url, handleFileDelete }) {
+  const { type, name } = file;
 
   return (
     <article
       tabIndex="0"
       className="w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative text-transparent hover:text-white shadow-sm"
     >
-      {type.match("image.*") ? (
-        <img
-          alt="upload preview"
-          src={objectURL}
-          className="img-preview w-full h-full sticky object-cover rounded-md bg-fixed"
-        />
-      ) : (
-        <img
-          alt="upload preview"
-          src={
-            "https://aiaedu.one/wp-content/themes/eikra/assets/img/noimage-420x273.jpg"
-          }
-          className="img-preview w-full h-full sticky object-cover rounded-md bg-fixed"
-        />
-      )}
+      <img
+        alt="upload preview"
+        src={
+          type.match("image.*")
+            ? url
+            : "https://aiaedu.one/wp-content/themes/eikra/assets/img/noimage-420x273.jpg"
+        }
+        className="img-preview w-full h-full sticky object-cover rounded-md bg-fixed"
+      />
       <section className="flex flex-col rounded-md text-xs break-words w-full h-full z-20 absolute top-0 pt-2">
         <h1 className="flex-1 text-blue-600 px-2">{name}</h1>
         <div className="flex bg-[#71B48D] text-primary-foreground px-2 py-1 rounded-b-md items-center">
@@ -40,9 +34,11 @@ export default function FileTemplate({ file, handleFileDelete }) {
               </svg>
             </i>
           </span>
-          <p className="p-1 size text-xs text-start">
-            <Badge>{type ? type : "Undefined"}</Badge>
-          </p>
+          {type ? (
+            <Badge>{type}</Badge>
+          ) : (
+            <Badge variant={"destructive"}>Undefined</Badge>
+          )}
           <button
             onClick={handleFileDelete}
             className="delete ml-auto focus:outline-none hover:bg-primary p-1 rounded-md"

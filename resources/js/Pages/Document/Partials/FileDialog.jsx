@@ -24,6 +24,8 @@ export default function FileDialog({ setPath = null }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     files: [],
   });
+  const [open, setOpen] = useState(false);
+  const formData = new FormData();
 
   const [tab, setTab] = useState("storage");
 
@@ -37,32 +39,16 @@ export default function FileDialog({ setPath = null }) {
   };
 
   const handleCancel = () => {
+    setOpen(false);
     setFiles([]);
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-
-    //     transform((data) => ({
-    //   ...data,
-    //   remember: data.remember ? 'on' : '',
-    // }))
-
-    // {progress && (
-    //   <progress value={progress.percentage} max="100">
-    //     {progress.percentage}%
-    //   </progress>
-    // )}
-
-    // Clear all errors...
-    // clearErrors()
-
-    // Clear errors for specific fields...
-    // clearErrors('field', 'anotherfield')
-    setData(
-      "files",
-      files.map((file) => file.document)
-    );
+    // setData(
+    //   "files",
+    //   files.map((file) => file.document)
+    // );
     setSubmitTriggered(true);
   };
 
@@ -73,7 +59,6 @@ export default function FileDialog({ setPath = null }) {
 
   useEffect(() => {
     if (submitTriggered) {
-      const formData = new FormData();
       Array.from(files).forEach((file) => {
         formData.append("files[]", file.document);
       });
@@ -85,11 +70,19 @@ export default function FileDialog({ setPath = null }) {
           },
         })
         .then((response) => {
-          console.log(response);
+          if (response.data.success) {
+            // setDocuments((prevFiles) => [
+            //   ...prevFiles,
+            //   response.data.documents,
+            // ]);
+            handleCancel();
+          }
         })
         .catch((error) => {
           console.log(error);
         });
+
+      // Not Working
       // post(route("document.store"), {
       //   onSuccess: (data) => console.log("DATA: ", data),
       //   onError: (error) => console.log("ERROR: ", error),
@@ -108,7 +101,7 @@ export default function FileDialog({ setPath = null }) {
   }, []);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="px-4 py-2 cursor-pointer text-sm rounded-full font-medium leading-5 text-white transition-colors duration-150 bg-blue-600 border border-transparent active:bg-blue-600 hover:bg-blue-700 focus:outline-none focus:shadow-outline-blue">
           Select
@@ -225,6 +218,7 @@ export default function FileDialog({ setPath = null }) {
                 type="button"
                 variant="secondary"
                 className="bg-emerald-500 text-white hover:bg-emerald-400"
+                onClick={handleCancel}
               >
                 NO
               </Button>

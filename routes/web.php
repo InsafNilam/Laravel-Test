@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/user', UserController::class);
     Route::resource('/centre', CentreController::class);
     Route::resource('/document', DocumentController::class);
+    Route::get('/api/documents', [DocumentController::class, 'getData']);
 });
 
 Route::middleware('auth')->group(function () {

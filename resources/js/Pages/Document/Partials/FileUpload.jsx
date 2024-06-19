@@ -4,7 +4,7 @@ import { ScrollArea } from "@/Components/ui/scroll-area";
 
 const MAX_COUNT = 5;
 
-export default function FileUpload({ files, setFiles, setData }) {
+export default function FileUpload({ files, setFiles }) {
   const fileInputRef = useRef(null);
 
   const [counter, setCounter] = useState(0);

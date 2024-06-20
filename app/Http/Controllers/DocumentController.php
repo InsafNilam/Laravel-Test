@@ -68,7 +68,7 @@ class DocumentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Files uploaded successfully',
-                'data' => ['documents' => $documents],
+                'documents' => $documents,
             ], 201);
         } catch (Exception $e) {
             $errorMessage = $e instanceof FileUploadException ? $e->getMessage() : 'An error occurred while uploading files.';

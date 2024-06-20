@@ -13,92 +13,81 @@ import { ScrollArea } from "@/Components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
 import React, { useEffect, useState } from "react";
 import FileUpload from "./FileUpload";
-import { Link, useForm } from "@inertiajs/react";
 import axios from "axios";
+import PropTypes from "prop-types";
 
-export default function FileDialog({ setPath = null }) {
-  const [documents, setDocuments] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null); // Track selected document
+export default function FileDialog({
+  documents: initialDocuments = [],
+  selectedFiles = [],
+  setSelectedFiles,
+  apiUrl,
+  onSubmitCallback,
+  placeholder = "https://via.placeholder.com/150",
+}) {
+  const [documents, setDocuments] = useState(initialDocuments);
   const [files, setFiles] = useState([]);
-  const [submitTriggered, setSubmitTriggered] = useState(false);
-  const { data, setData, post, processing, errors, reset } = useForm({
-    files: [],
-  });
+  const [tempFiles, setTempFiles] = useState(selectedFiles);
   const [open, setOpen] = useState(false);
-  const formData = new FormData();
-
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
   const [tab, setTab] = useState("storage");
 
-  const onTabChange = (value) => {
-    setTab(value);
+  const handleDocumentClick = (path) => {
+    if (tempFiles.includes(path)) {
+      setTempFiles((prev) => prev.filter((file) => file !== path));
+    } else {
+      setTempFiles((prev) => [...prev, path]);
+    }
   };
 
-  const handleDocumentClick = (filePath) => {
-    setSelectedFile(filePath);
-    handleClick(filePath);
+  const handleSubmit = () => {
+    setFiles([]);
+    setSelectedFiles(tempFiles);
+    setOpen(false);
   };
 
   const handleCancel = () => {
-    setOpen(false);
     setFiles([]);
+    setTempFiles(selectedFiles);
+    setOpen(false);
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // setData(
-    //   "files",
-    //   files.map((file) => file.document)
-    // );
-    setSubmitTriggered(true);
-  };
+    const formData = new FormData();
+    Array.from(files).forEach((file) => {
+      formData.append("files[]", file.document);
+    });
 
-  const handleClick = (path) => {
-    alert(path);
-    setPath(path);
-  };
-
-  useEffect(() => {
-    if (submitTriggered) {
-      Array.from(files).forEach((file) => {
-        formData.append("files[]", file.document);
+    try {
+      const response = await axios.post(apiUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      axios
-        .post(route("document.store"), formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((response) => {
-          if (response.data.success) {
-            // setDocuments((prevFiles) => [
-            //   ...prevFiles,
-            //   response.data.documents,
-            // ]);
-            handleCancel();
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-
-      // Not Working
-      // post(route("document.store"), {
-      //   onSuccess: (data) => console.log("DATA: ", data),
-      //   onError: (error) => console.log("ERROR: ", error),
-      // });
-      setSubmitTriggered(false);
+      if (response.data.success) {
+        setUploadedDocuments((prevFiles) => [
+          ...prevFiles,
+          ...response.data.documents,
+        ]);
+        handleCancel();
+        if (onSubmitCallback) {
+          onSubmitCallback(response.data.documents);
+        }
+      }
+    } catch (error) {
+      console.log(error);
     }
-  }, [submitTriggered, data]);
-
-  const fetchData = async (url) => {
-    const response = await axios.get(url);
-    setDocuments(response.data);
   };
 
-  useEffect(() => {
-    fetchData(`/api/documents?page=${0}&perPage=${10}`);
-  }, []);
+  const fetchData = async (url) => {
+    try {
+      const response = await axios.get(url);
+      setDocuments(response.data);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -115,9 +104,8 @@ export default function FileDialog({ setPath = null }) {
           </DialogDescription>
         </DialogHeader>
         <Tabs
-          defaultValue="storage"
           value={tab}
-          onValueChange={onTabChange}
+          onValueChange={setTab}
           className="w-full min-h-[500px]"
         >
           <TabsList className="grid w-full grid-cols-2 rounded-b-none">
@@ -129,37 +117,63 @@ export default function FileDialog({ setPath = null }) {
             className="bg-[#F1F5F9] mt-0 h-[95%] rounded-b-md p-3 pr-0"
           >
             <ScrollArea className="h-[440px] w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 pr-3">
-                {Object.keys(documents).length !== 0 &&
-                  documents.data.map((document) => (
+              <div className="flex flex-col gap-1">
+                {uploadedDocuments.length > 0 && (
+                  <>
+                    <h2>Uploaded Documents</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 pr-3">
+                      {uploadedDocuments.map((document) => (
+                        <div
+                          key={document.id}
+                          className="relative p-2 h-40 bg-primary hover:bg-primary/80 rounded-lg focus:bg-primary/60 focus:outline-none transition duration-200 cursor-pointer"
+                          onClick={() =>
+                            handleDocumentClick(document.file_path)
+                          }
+                        >
+                          <img
+                            src={document.file_path}
+                            alt={`Document ${document.id}`}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = placeholder;
+                            }}
+                            className="w-full h-full object-contain object-center"
+                          />
+                          {tempFiles.includes(document.file_path) && (
+                            <div className="absolute bottom-1 right-1 shadow-sm bg-white w-5 h-5 rounded-full flex items-center justify-center">
+                              <span className="text-green-500">&#10003;</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <h2>Existing Documents</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 pr-3">
+                  {documents.data?.map((document) => (
                     <div
                       key={document.id}
                       className="relative p-2 h-40 bg-primary hover:bg-primary/80 rounded-lg focus:bg-primary/60 focus:outline-none transition duration-200 cursor-pointer"
                       onClick={() => handleDocumentClick(document.file_path)}
-                      tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" &&
-                        handleDocumentClick(document.file_path)
-                      }
                     >
                       <img
                         src={document.file_path}
                         alt={`Document ${document.id}`}
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src =
-                            "https://cdn.iconscout.com/icon/free/png-256/free-avatar-370-456322.png";
-                          e.target.alt = `Fallback Avatar ${document.id}`;
+                          e.target.src = placeholder;
                         }}
                         className="w-full h-full object-contain object-center"
                       />
-                      {selectedFile === document.file_path && (
+                      {tempFiles.includes(document.file_path) && (
                         <div className="absolute bottom-1 right-1 shadow-sm bg-white w-5 h-5 rounded-full flex items-center justify-center">
-                          <span className=" text-green-500">&#10003;</span>
+                          <span className="text-green-500">&#10003;</span>
                         </div>
                       )}
                     </div>
                   ))}
+                </div>
               </div>
             </ScrollArea>
           </TabsContent>
@@ -167,48 +181,27 @@ export default function FileDialog({ setPath = null }) {
             value="upload"
             className="bg-[#F1F5F9] mt-0 h-[95%] rounded-b-md p-2"
           >
-            {/* <form onSubmit={onSubmit}> */}
             <FileUpload files={files} setFiles={setFiles} />
-            {/* <DialogFooter className="justify-end gap-2">
-                <DialogClose asChild>
-                  <Button
-                    disabled={processing}
-                    onClick={handleCancel}
-                    type="button"
-                  >
-                    Upload
-                  </Button>
-                </DialogClose>
-                <Button
-                  disabled={processing}
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 active:bg-blue-600"
-                >
-                  Save
-                </Button>
-              </DialogFooter>
-            </form> */}
           </TabsContent>
         </Tabs>
         <DialogFooter className={`${tab === "storage" && "sm:justify-end"}`}>
           {tab === "storage" && (
             <div className="flex flex-1 items-start">
               <nav className="text-center space-x-1">
-                {Object.keys(documents).length !== 0 &&
-                  documents.links.map((link) => (
-                    <button
-                      onClick={() => fetchData(link.url)}
-                      key={link.label}
-                      className={
-                        "inline-block py-2 px-3 rounded-lg text-gray-200 text-xs " +
-                        (link.active ? "bg-gray-950 " : " ") +
-                        (!link.url
-                          ? "!text-gray-500 cursor-not-allowed "
-                          : "hover:bg-gray-950")
-                      }
-                      dangerouslySetInnerHTML={{ __html: link.label }}
-                    ></button>
-                  ))}
+                {documents.links?.map((link) => (
+                  <button
+                    onClick={() => fetchData(link.url)}
+                    key={link.label}
+                    className={`inline-block py-2 px-3 rounded-lg text-gray-200 text-xs ${
+                      link.active ? "bg-gray-950" : ""
+                    } ${
+                      !link.url
+                        ? "!text-gray-500 cursor-not-allowed"
+                        : "hover:bg-gray-950"
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: link.label }}
+                  ></button>
+                ))}
               </nav>
             </div>
           )}
@@ -225,18 +218,17 @@ export default function FileDialog({ setPath = null }) {
             </DialogClose>
             {tab === "storage" ? (
               <Button
-                disabled={false}
                 type="submit"
                 variant="secondary"
                 className="bg-red-600 text-white hover:bg-red-500"
-                onClick={() => {}}
+                onClick={handleSubmit}
               >
                 YES
               </Button>
             ) : (
               <form onSubmit={onSubmit}>
                 <Button
-                  disabled={processing}
+                  disabled={files.length === 0}
                   type="submit"
                   className="bg-blue-600 hover:bg-blue-700 active:bg-blue-600"
                 >
@@ -250,3 +242,12 @@ export default function FileDialog({ setPath = null }) {
     </Dialog>
   );
 }
+
+FileDialog.propTypes = {
+  selectedFiles: PropTypes.arrayOf(PropTypes.string),
+  documents: PropTypes.object.isRequired,
+  setSelectedFiles: PropTypes.func.isRequired,
+  apiUrl: PropTypes.string.isRequired,
+  onSubmitCallback: PropTypes.func,
+  placeholder: PropTypes.string,
+};

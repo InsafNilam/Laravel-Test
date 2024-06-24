@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CentreController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/user', UserController::class);
     Route::resource('/centre', CentreController::class);
     Route::resource('/document', DocumentController::class);
-    Route::get('/api/documents', [DocumentController::class, 'getData']);
+
+    // API Resource
+    Route::apiResource('/files', FileController::class);
 });
 
 Route::middleware('auth')->group(function () {

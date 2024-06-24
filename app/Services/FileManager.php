@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\FileRepo;
+use App\Models\File;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 
 class FileManager
 {
@@ -27,31 +27,33 @@ class FileManager
      *
      * Finally, the method returns true to indicate that the file has been successfully uploaded and the record has been created.
      *
-     * @param string $ref_table_name The name of the reference table.
-     * @param int    $ref_id         The ID of the record in the reference table.
-     * @param mixed  $file           The file to upload. If null, the method returns false.
-     * @param string $version        The version of the file. Defaults to 'V0'.
-     * @return FileRepo              If the document was successfully uploaded and the record was created returns the document.
+     * @param string $folder    The folder where the file is stored.
+     * @param int    $user_id   The ID of the user associated with the file.
+     * @param mixed  $file      The file to upload. If null, the method returns false.
+     * @param string $version   The version of the file. Defaults to 'V0'.
+     * @return File             If the document was successfully uploaded and the record was created returns the document.
      *
      * @throws Exception If the file is null or if there is an issue uploading the file.
      */
-    public static function upload(string $ref_table_name, int $ref_id, $file = null, $version = 'V0'): FileRepo
+    public static function upload(string $folder, int $user_id, $file = null, $version = 'V0'): File
     {
         try {
             if ($file != null) {
                 $fileName = Carbon::now()->getTimestamp() . "√√√" . $file->getClientOriginalName();
-                if (!Storage::disk('public')->exists($ref_table_name)) {
-                    Storage::disk('public')->makeDirectory($ref_table_name);
+                if (!Storage::disk('public')->exists($folder)) {
+                    Storage::disk('public')->makeDirectory($folder);
                 }
-                Storage::disk('public')->put($ref_table_name . "/" . $fileName, file_get_contents($file));
+                Storage::disk('public')->put($folder . "/" . $fileName, file_get_contents($file));
 
-                $file = FileRepo::create([
-                    'ref_id' => $ref_id,
-                    'ref_name' => $ref_table_name,
-                    'path' => $ref_table_name . "/" . $fileName,
+                $file = File::create([
+                    'user_id' => $user_id,
+                    'name' => $file->getClientOriginalName(),
+                    'type' => $file->getClientMimeType(),
+                    'folder' => $folder,
+                    'path' => asset('storage/') . '/' . $folder . "/" . $fileName,
+                    'version' => $version,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
-                    'version' => $version,
                 ]);
 
                 return $file;
@@ -67,18 +69,18 @@ class FileManager
      * Updates the file association for a reference record, optionally preserving existing files.
      *
      * This function updates the file association for a record in a reference table identified by
-     * `$ref_table_name` and `$ref_id`. It offers an option to control how existing files are handled
+     * `$folder` and `$user_id`. It offers an option to control how existing files are handled
      * using the `$preserve` parameter.
      *
-     * @param string $ref_table_name The name of the reference table where the file is associated.
-     * @param int $ref_id The ID of the record in the reference table.
-     * @param mixed $file (optional) The new file to be associated. Can be a file path, an uploaded file object,
-     *                   or null to remove existing associations.
+     * @param string $folder The folder where the file is stored.
+     * @param int $user_id   The ID of the user associated with the file.
+     * @param mixed $file    (optional) The new file to be associated. Can be a file path, an uploaded file object,
+     *                       or null to remove existing associations.
      * @param string $preserve (default: false) Whether to preserve existing files:
      *  - **true:** Existing files are not deleted. A new version (V + number of existing files) is uploaded.
      *  - **false (default):** Existing files are deleted from storage before uploading a new file.
      *
-     * @return FileRepo If the document was successfully updated and the record was created returns the document.
+     * @return File If the document was successfully updated and the record was created returns the document.
      *
      * ## Behavior based on existing files and $preserve:
      *
@@ -95,20 +97,54 @@ class FileManager
      *        - Existing files are deleted from storage using `Storage::disk('public')->delete($document->path)`.
      *        - The new `$file` is uploaded using `self::upload`.
      */
-    public static function update(string $ref_table_name, int $ref_id, $file = null, $preserve = false): FileRepo
+    public static function update(string $folder, int $user_id, $file = null, $preserve = false): File
     {
-        $documents = FileRepo::query()->where("ref_id", $ref_id)->get();
+        $documents = File::query()->where("user_id", $user_id)->get();
         if ($documents->isEmpty()) {
-            return self::upload($ref_table_name, $ref_id, $file);
+            return self::upload($folder, $user_id, $file);
         } else {
             if ($preserve) {
-                return self::upload($ref_table_name, $ref_id, $file, version: 'V' . count($documents));
+                return self::upload($folder, $user_id, $file, version: 'V' . count($documents));
             } else {
                 foreach ($documents as $document) {
                     self::delete($document->id, false);
                 }
-                return self::upload($ref_table_name, $ref_id, $file);
+                return self::upload($folder, $user_id, $file);
             }
+        }
+    }
+
+    /**
+     * Modifies an existing file record by updating the file in storage.
+     * This function modifies an existing file record by updating the file in storage.
+     * The file record is identified by the provided ID. The new file is uploaded to storage,
+     * and the file path in the database is updated to reflect the new file.
+     * If the file is null, an exception is thrown.
+     *
+     * @param int $id The ID of the file record to modify.
+     * @param mixed $file The new file to be associated. Can be a file path, an uploaded file object, or null to remove existing associations.
+     *
+     * @throws Exception If the file is null.
+     */
+    public static function modify(int $id, $file = null)
+    {
+        $document = File::findOrFail($id);
+        if ($file != null) {
+            $fileName = Carbon::now()->getTimestamp() . "√√√" . $file->getClientOriginalName();
+            if (!Storage::disk('public')->exists($document->folder)) {
+                Storage::disk('public')->makeDirectory($document->folder);
+            }
+            self::deleteFile($document->path);
+            Storage::disk('public')->put($document->folder . "/" . $fileName, file_get_contents($file));
+
+            $document->update([
+                'path' => asset('storage/') . '/' . $document->folder . "/" . $fileName,
+                'name' => $file->getClientOriginalName(),
+                'type' => $file->getClientMimeType(),
+                'updated_at' => Carbon::now(),
+            ]);
+        } else {
+            throw new Exception("File is null");
         }
     }
 
@@ -128,16 +164,16 @@ class FileManager
      */
     public static function delete(int $id, $preserve = false): JsonResponse
     {
-        $query = FileRepo::find($id);
+        $query = File::findOrFail($id);
         if (!$query) {
             throw new Exception("File with ID $id not found.");
         } else {
             if ($preserve) {
-                FileRepo::query()->where('id', $id)->delete();
+                File::query()->where('id', $id)->delete();
                 return response()->json(['message' => 'File deleted successfully'], 200);
             } else {
                 self::deleteFile($query->path);
-                FileRepo::query()->where('id', $id)->forceDelete();
+                File::query()->where('id', $id)->forceDelete();
                 return response()->json(['message' => 'File deleted successfully'], 200);
             }
         }
@@ -169,26 +205,26 @@ class FileManager
      * This function fetches file paths associated with a given reference table name and ID. It
      * offers the flexibility to include soft-deleted records based on the provided `$trash` parameter.
      *
-     * @param string $ref_table_name The name of the reference table where the file is associated.
-     * @param int $ref_id            The ID of the record in the reference table.
-     * @param string $trash          (default: "none") An optional parameter to control which trashed records are included:
-     *                                  - "none": Returns only non-trashed records (default behavior).
-     *                                  - "with": Returns both non-trashed and trashed records.
-     *                                  - "only": Returns only trashed records.
+     * @param string $folder The folder where the file is stored.
+     * @param int $user_id   The ID of the user associated with the file.
+     * @param string $trash  (default: "none") An optional parameter to control which trashed records are included:
+     *                           - "none": Returns only non-trashed records (default behavior).
+     *                           - "with": Returns both non-trashed and trashed records.
+     *                           - "only": Returns only trashed records.
      *
      * @return array An array containing file information for matching records.
      *               Each element in the array is an associative array with the following keys:
-     *                  - "id": The ID of the file record.
-     *                  - "path": The full path to the file relative to the public storage directory.
-     *                  - "ref_name": The name of the reference table.
-     *                  - "ref_id": The ID of the record in the reference table.
-     *                  - "version": The version of the file.
+     *                  - "id"      : The ID of the file record.
+     *                  - "path"    : The full path to the file relative to the public storage directory.
+     *                  - "folder"  : The folder where the file is stored.
+     *                  - "user_id" : The ID of the user associated with the file.
+     *                  - "version" : The version of the file.
      */
-    public static function get_path_by(string $ref_table_name, int $ref_id, $trash = 'none'): array
+    public static function get_path_by(string $folder, int $user_id, $trash = 'none'): array
     {
-        $query = FileRepo::query()
-            ->where("ref_name", $ref_table_name)
-            ->where("ref_id", $ref_id);
+        $query = File::query()
+            ->where("folder", $folder)
+            ->where("user_id", $user_id);
 
         $validTrashOptions = ["with", "only", "none"];
 
@@ -210,13 +246,7 @@ class FileManager
         }
 
         $documents = $query->get();
-        $res = [];
-
-        foreach ($documents as $document) {
-            $res[] = ["id" => $document->id, "ref_name" => $document->ref_name, 'ref_id' => $document->ref_id, "path" => asset('storage/') . '/' . $document->path, 'version' => $document->version];
-        }
-
-        return $res;
+        return $documents;
     }
 
     /**
@@ -233,7 +263,7 @@ class FileManager
      */
     public function restore(int $id): JsonResponse
     {
-        $query = FileRepo::find($id);
+        $query = File::find($id);
 
         if (!$query) {
             throw new Exception("File with ID $id not found.");

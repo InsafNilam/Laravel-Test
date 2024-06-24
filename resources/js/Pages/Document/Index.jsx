@@ -1,15 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
 import React, { useState } from "react";
-import FileDialog from "./Partials/FileDialog";
-import FileInput from "./Partials/FileInput";
 import { Button } from "@/Components/ui/button";
+import FileInput from "@/Components/upload/FileInput";
 
 export default function Index({ auth, documents }) {
   const [files, setFiles] = useState([]);
-  const handleFileChange = (newFiles) => {
-    setFiles(newFiles);
-  };
 
   return (
     <AuthenticatedLayout
@@ -30,9 +26,12 @@ export default function Index({ auth, documents }) {
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <FileInput
-                initialFiles={files}
-                onFileChange={handleFileChange}
-                apiUrl={route("document.store")}
+                selectedFiles={files}
+                onFileChange={(files) => {
+                  setFiles(files);
+                }}
+                apiUrl={route("files.store")}
+                multiple={false}
                 documents={documents}
               />
               <div className="flex mr-2 sm:justify-end">

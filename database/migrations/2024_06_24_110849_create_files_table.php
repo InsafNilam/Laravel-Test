@@ -10,10 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('file_repos', function (Blueprint $table) {
+        Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ref_id');
-            $table->string('ref_name');
+            $table->string('name');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('folder');
             $table->text('path');
             $table->string('type')->default('undefined');
             $table->string('version')->default('V0');

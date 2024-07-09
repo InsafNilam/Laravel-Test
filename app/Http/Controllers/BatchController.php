@@ -78,11 +78,8 @@ class BatchController extends Controller
         // $pdf = Pdf::loadView('pdf.invoice', $data);
         // return $pdf->download('invoice.pdf');
 
-        $pdf = $this->pdfService->generatePDF("");
         return Inertia::render('Batches/Show', [
             'batch' => $batch,
-            'pdf' => $pdf,
-
         ]);
     }
 

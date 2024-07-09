@@ -47,14 +47,7 @@ class PdfService
         $this->PdfManagerService = $pdfManager;
     }
 
-    public function generatePDF($template, $data = [
-        'name' => 'John Doe',
-        'course' => 'Advanced PHP Programming',
-        'date' => 'July 9, 2024',
-        'instructor_name' => 'Jane Smith',
-        'institution_name' => 'Tech Academy'
-
-    ])
+    public function generatePDF($template, $data)
     {
         return $this->PdfManagerService->generatePDF($data, $template);
     }

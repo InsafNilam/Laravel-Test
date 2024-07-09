@@ -21,47 +21,13 @@ class PDFController extends Controller
         $this->pdfService = $pdfService;
     }
 
-    public function generatePDF()
+    public function generatePDF(Request $request)
     {
-        return $this->pdfService->generatePDF();
-    }
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+        $validated = $request->validate([
+            'data' => 'object',
+            'template' => 'string'
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return $this->pdfService->generatePDF($validated['template'], $validated['data']);
     }
 }

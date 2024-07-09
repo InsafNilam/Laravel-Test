@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\CentreController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\PDFController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -27,9 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/user', UserController::class);
     Route::resource('/centre', CentreController::class);
     Route::resource('/document', DocumentController::class);
+    Route::resource('/batches', BatchController::class);
 
     // API Resource
     Route::apiResource('/files', FileController::class);
+    Route::post('/pdf', [PDFController::class, 'generatePDF'	])->name('pdf.generatePDF');
+
 });
 
 Route::middleware('auth')->group(function () {

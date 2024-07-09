@@ -172,6 +172,13 @@ export default function Index({
         }
     };
 
+    const generatePDF = async() =>{
+      const response = await axios.post(route("generate-pdf", {data:[], template:"template"}))
+      if(response.status){
+        console.log(response.message)
+      }
+    }
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -342,14 +349,20 @@ export default function Index({
                                                         </DropdownMenuLabel>
                                                         <DropdownMenuItem>
                                                             <Link
-                                                                className="w-full"
+                                                               className="w-full"
                                                                 href={route(
                                                                     "batches.show",
                                                                     batch.id
-                                                                )}
-                                                            >
+                                                                )}>
                                                                 Show
                                                             </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem>
+                                                            <Button
+                                                            onClick={generatePDF}
+                                                           >
+                                                                Download
+                                                            </Button>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem>
                                                             <Link

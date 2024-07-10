@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Laravel 11 Generate PDF Example - MIMInthikhaff.com</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>

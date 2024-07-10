@@ -47,8 +47,13 @@ class PdfService
         $this->PdfManagerService = $pdfManager;
     }
 
-    public function generatePDF($template, $data)
+    public function generatePDF($template = null, $data = null)
     {
-        return $this->PdfManagerService->generatePDF($data, $template);
+        return $this->PdfManagerService->generatePDF($template, $data);
+    }
+
+    public function downloadPDF($template = null, $data = null)
+    {
+        return $this->PdfManagerService->downloadPDF($template, $data);
     }
 }

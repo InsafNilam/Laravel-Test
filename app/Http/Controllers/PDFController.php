@@ -24,10 +24,22 @@ class PDFController extends Controller
     public function generatePDF(Request $request)
     {
         $validated = $request->validate([
-            'data' => 'object',
-            'template' => 'string'
+            'data' => 'object|nullable',
+            'template' => 'string|nullable'
         ]);
 
-        return $this->pdfService->generatePDF($validated['template'], $validated['data']);
+        $this->pdfService->generatePDF($validated['template'], $validated['data']);
+
+        // return redirect()->back()->with('success', 'PDF generated successfully');
+    }
+
+    public function downloadPDF(Request $request)
+    {
+        $validated = $request->validate([
+            'data' => 'object|nullable',
+            'template' => 'string|nullable'
+        ]);
+
+        return $this->pdfService->downloadPDF($validated['template'], $validated['data']);
     }
 }

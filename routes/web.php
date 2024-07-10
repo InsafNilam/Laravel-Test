@@ -33,7 +33,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // API Resource
     Route::apiResource('/files', FileController::class);
-    Route::post('/generate-pdf', [PDFController::class, 'generatePDF'	])->name('generate-pdf');
+    Route::get('/api/generate-pdf', [PDFController::class, 'generatePDF'])->name('api.generate-pdf');
+    Route::get('/api/download-pdf', [PDFController::class, 'downloadPDF'])->name('api.download-pdf');
 
 });
 

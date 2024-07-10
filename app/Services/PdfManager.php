@@ -3,15 +3,18 @@
 namespace App\Services;
 
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Exception;
+use Illuminate\Support\Facades\App;
 
 class PdfManager
 {
-    public function generatePDF($data, $template)
+    public function generatePDF($template = null, $data = null)
     {
-         // Ensure $data is an array
-         if (!is_array($data)) {
+        // Ensure $data is an array
+        if (!is_array($data)) {
             $data = [];
         }
         $users = User::all();
@@ -29,7 +32,6 @@ class PdfManager
 
         // Merge provided data with default data
         $data = array_merge($defaultData, $data);
-
 
 
         // Instantiate domPDF
@@ -50,9 +52,45 @@ class PdfManager
         $dompdf->render();
 
         // Output the generated PDF to Browser (downloadable)
-        $dompdf->stream('generated-document.pdf');
-        return response()->json(["success"=> true,'message' => 'PDF generated successfully'], 200);
-
-
+        $dompdf->stream('generated-document.pdf', ['Attachment' => false]);
+        return $dompdf->output();
     }
+
+    public function downloadPDF($template = null, $data = null)
+    {
+        if ($template === null) {
+            throw new Exception('Template is required');
+        }
+        if ($data === null) {
+            $data = [];
+        }
+
+        $users = User::all();
+        $defaultData = [
+            'date' => 'July 9, 2024',
+            'title' => 'Welcome to ItSolutionStuff.com',
+            'users' => $users,
+        ];
+
+        $data = array_merge($defaultData, $data);
+
+        try {
+            // Load the view into dompdf
+            $pdf = Pdf::loadView($template, $data)->setOptions([
+                'defaultFont' => 'arial',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true, // Enable remote assets if necessary
+                'defaultPaperSize' => 'a4',
+                'defaultPaperOrientation' => 'portrait',
+            ]);
+
+            // Return the generated PDF for download
+            return $pdf->download("{$template}.pdf", );
+        } catch (Exception $e) {
+            // Handle any exceptions that occur during PDF generation
+            return response()->json(['error' => 'Failed to generate PDF: ' . $e->getMessage()], 500);
+        }
+    }
+
+
 }

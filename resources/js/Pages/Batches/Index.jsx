@@ -43,6 +43,7 @@ import {
 import Pagination from "@/Components/Pagination";
 import { BATCH_STATUS_CLASS_MAP, BATCH_STATUS_TEXT_MAP } from "@/constants";
 import axios from "axios";
+import { ClipLoader } from "react-spinners";
 
 export default function Index({
   auth,
@@ -58,6 +59,7 @@ export default function Index({
   const [openRestoreModal, setOpenRestoreModal] = useState(false);
   const [batchToRestore, setBatchToRestore] = useState(null);
   const [batchToForceDelete, setBatchToForceDelete] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setBatches(initialBatches);
@@ -169,6 +171,7 @@ export default function Index({
   };
 
   const generatePDF = () => {
+    setLoading(true);
     axios
       .get(route("api.download-pdf"), {
         params: { template: "template" },
@@ -184,7 +187,11 @@ export default function Index({
           type: "application/pdf",
         });
         var url = window.URL.createObjectURL(blob);
-        window.open(url);
+        const timeout = setTimeout(() => {
+          setLoading(false);
+          clearTimeout(timeout); // Clear the timeout to prevent memory leaks
+       }, 500);
+        window.open(url, target="_blank");
       })
       .catch((error) => {
         console.log(error);
@@ -537,6 +544,14 @@ export default function Index({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {loading && (
+        <div className="loading-screen">
+
+          <ClipLoader />
+
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }

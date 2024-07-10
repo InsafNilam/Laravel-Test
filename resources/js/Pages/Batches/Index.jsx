@@ -169,18 +169,38 @@ export default function Index({
   };
 
   const generatePDF = () => {
-    router.get(
-      route("api.download-pdf"),
-      { data: null, template: "template" },
-      {
-        onSuccess: () => {
-          console.log("PDF generated successfully");
+    axios
+      .get(route("api.download-pdf"), {
+        params: { template: "template" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+          Accept: "application/pdf",
         },
-        onError: (error) => {
-          console.log(error);
-        },
-      }
-    );
+        responseType: "blob",
+      })
+      .then((response) => {
+        console.log("DATA = " + response);
+        var blob = new Blob([response.data], {
+          type: "application/pdf",
+        });
+        var url = window.URL.createObjectURL(blob);
+        window.open(url);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    // router.get(
+    //   route("api.generate-pdf"),
+    //   { data: null, template: "template" },
+    //   {
+    //     onSuccess: () => {
+    //       console.log("PDF generated successfully");
+    //     },
+    //     onError: (error) => {
+    //       console.log(error);
+    //     },
+    //   }
+    // );
   };
 
   return (
@@ -320,15 +340,9 @@ export default function Index({
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Link
-                                className="w-full"
-                                href={router.get(route("api.generate-pdf"), {
-                                  data: null,
-                                  template: "template",
-                                })}
-                              >
+                              <div className="w-full" onClick={generatePDF}>
                                 Download
-                              </Link>
+                              </div>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Link

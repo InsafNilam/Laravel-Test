@@ -36,10 +36,10 @@ class PDFController extends Controller
     public function downloadPDF(Request $request)
     {
         $validated = $request->validate([
-            'data' => 'object|nullable',
-            'template' => 'string|nullable'
+            'data' => 'nullable',
+            'template' => 'nullable'
         ]);
 
-        return $this->pdfService->downloadPDF($validated['template'], $validated['data']);
+        return $this->pdfService->downloadPDF($validated['template']);
     }
 }

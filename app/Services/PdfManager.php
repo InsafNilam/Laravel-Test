@@ -56,13 +56,10 @@ class PdfManager
         return $dompdf->output();
     }
 
-    public function downloadPDF($template = null, $data = null)
+    public function downloadPDF($template = null)
     {
         if ($template === null) {
             throw new Exception('Template is required');
-        }
-        if ($data === null) {
-            $data = [];
         }
 
         $users = User::all();
@@ -72,20 +69,17 @@ class PdfManager
             'users' => $users,
         ];
 
-        $data = array_merge($defaultData, $data);
-
         try {
             // Load the view into dompdf
-            $pdf = Pdf::loadView($template, $data)->setOptions([
-                'defaultFont' => 'arial',
+            $pdf = Pdf::loadView($template, $defaultData)->setOptions([
+                'defaultFont' => 'Verdana',
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true, // Enable remote assets if necessary
+                'isRemoteEnabled' => true,
                 'defaultPaperSize' => 'a4',
                 'defaultPaperOrientation' => 'portrait',
             ]);
-
             // Return the generated PDF for download
-            return $pdf->download("{$template}.pdf", );
+            return $pdf->stream("{$template}.pdf");
         } catch (Exception $e) {
             // Handle any exceptions that occur during PDF generation
             return response()->json(['error' => 'Failed to generate PDF: ' . $e->getMessage()], 500);
